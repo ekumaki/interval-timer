@@ -1,6 +1,6 @@
 // import Image from 'next/image'
 import { Headline } from "./Headline";
-import styles from "../styles/Home.module.css";
+import styles from "./Main.module.css";
 
 export function Main() {
   return (
