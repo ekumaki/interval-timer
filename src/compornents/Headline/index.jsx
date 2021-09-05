@@ -1,5 +1,5 @@
 // import Image from 'next/image'
-import styles from "./Headline.module.css";
+import styles from "src/compornents/Headline/Headline.module.css";
 
 export function Headline() {
   return (
