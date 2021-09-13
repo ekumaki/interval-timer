@@ -7,6 +7,7 @@ export function Main() {
   // const [startTime, setStartTime] = useState(0);
   const [timer, setTimer] = useState(0);
   const [timeoutId, setTimeoutId] = useState();
+  const [buttonState, setButtonState] = useState("initial");
   // const [elapsedTime, setElapsedTime] = useState(0); // 経過時間
   // let startTime;
   // let elapsedTime = 0;
@@ -30,19 +31,34 @@ export function Main() {
   //   );
   // };
 
+  // ストップボタンの処理
   const handleStart = () => {
+    // 計測時はボタン無効化
+    if (buttonState === "running") {
+      return;
+    }
+    setButtonState("running"); //計測状態に変更
+
     setTimeoutId(
       setInterval(() => {
         setTimer((prevTimer) => {
-          prevTimer++;
+          prevTimer += 10;
           return prevTimer;
         });
-      }, 1000)
+      }, 10)
     );
   };
 
   // ストップボタンの処理
   const handleStop = () => {
+    // 初期状態時と停止時はボタン無効化
+    if (buttonState === "initial") {
+      return;
+    }
+    if (buttonState === "stopped") {
+      return;
+    }
+    setButtonState("stopped"); //停止状態に変更
     clearTimeout(timeoutId);
     // elapsedTime = Date.now() - startTime;
     // setElapsedTime(Date.now() - startTime);
@@ -50,16 +66,26 @@ export function Main() {
 
   // リセットボタンの処理
   const handleReset = () => {
-    setTimer(0);
+    // 初期状態時と計測時はボタン無効化
+    if (buttonState === "initial") {
+      return;
+    }
+    if (buttonState === "running") {
+      return;
+    }
+    setButtonState("initial"); //初期状態に変更
+
+    setTimer(0); //タイマーを０にする
   };
 
-  // console.log(elapsedTime);
-  // console.log({newStartTime});
+  console.log(buttonState);
 
   return (
     <main className={styles.main}>
       <Headline />
       <div>{timer}</div>
+      <div>{Math.floor((timer / 1000) % 60)}s</div>
+      <div>{(timer / 10) % 1000}ms</div>
       <button onClick={handleStart}>Start</button>
       <button onClick={handleStop}>Stop</button>
       <button onClick={handleReset}>Reset</button>
