@@ -1,50 +1,50 @@
 // import Image from 'next/image'
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useCallback } from "react/cjs/react.development";
 import { Headline } from "src/compornents/Headline";
 import styles from "src/compornents/Main/Main.module.css";
 
+// const ShowTimer = ({timer}) => {
+//   return <div>{timer}</div>
+// }
+
 export function Main() {
-  // const [startTime, setStartTime] = useState(0);
-  const [timer, setTimer] = useState(0);
+  const defaultWorkoutValue = 4000;
+  const defaultRestValue = 3000;
+  const [workoutTime, setWorkoutTime] = useState(defaultWorkoutValue);
+  const [restTime, setRestTime] = useState(defaultRestValue);
   const [timeoutId, setTimeoutId] = useState();
   const [buttonState, setButtonState] = useState("initial");
-  // const [elapsedTime, setElapsedTime] = useState(0); // 経過時間
-  // let startTime;
-  // let elapsedTime = 0;
+  const [toggle, setToggle] = useState(true);
 
-  // const countUp = () => {
-  //   //スタートボタンを押した時間との差
-  //   // const d = new Date(Date.now() - startTime + elapsedTime);
-  //   // const d = new Date(Date.now() - startTime);
-  //   // const m = String(d.getMinutes()).padStart(2, "0");
-  //   // const s = String(d.getSeconds()).padStart(2, "0");
-  //   // const ms = String(d.getMilliseconds()).padStart(2, "0");
-  //   // setTimer(`${m}:${s}:${ms}`);
+  // test用
+  const [countA, setCountA] = useState(1);
+  const [countB, setCountB] = useState(1);
 
-  //   setTimer(startTime);
+  const countUp = useCallback((setcount) => {
+    setcount((prevCount) => prevCount + 1);
+  }, []);
 
-  //   // ストップ用にsetTimeoutの返り値を取得
-  //   setTimeoutId(
-  //     setTimeout(() => {
-  //       countUp();
-  //     }, 10)
-  //   );
-  // };
+  const handleClick = useCallback(() => {
+    toggle ? countUp(setCountA) : countUp(setCountB);
+  }, [toggle]);
+  console.log(toggle ? "workout" : "rest");
+  // ここまでtest
 
-  // ストップボタンの処理
+  // スタートボタンの処理
+  const countDown = (settimer) => {
+    settimer((prevTime) => prevTime - 10);
+  };
+
   const handleStart = () => {
     // 計測時はボタン無効化
     if (buttonState === "running") {
       return;
     }
     setButtonState("running"); //計測状態に変更
-
     setTimeoutId(
       setInterval(() => {
-        setTimer((prevTimer) => {
-          prevTimer += 10;
-          return prevTimer;
-        });
+        toggle ? countDown(setWorkoutTime) : countDown(setRestTime);
       }, 10)
     );
   };
@@ -52,43 +52,64 @@ export function Main() {
   // ストップボタンの処理
   const handleStop = () => {
     // 初期状態時と停止時はボタン無効化
-    if (buttonState === "initial") {
-      return;
-    }
-    if (buttonState === "stopped") {
+    if (buttonState === "initial" || buttonState === "stopped") {
       return;
     }
     setButtonState("stopped"); //停止状態に変更
     clearTimeout(timeoutId);
-    // elapsedTime = Date.now() - startTime;
-    // setElapsedTime(Date.now() - startTime);
+  };
+
+  // タイマーの初期化
+  const initialization = () => {
+    toggle
+      ? setWorkoutTime(defaultWorkoutValue)
+      : setRestTime(defaultRestValue);
   };
 
   // リセットボタンの処理
   const handleReset = () => {
     // 初期状態時と計測時はボタン無効化
-    if (buttonState === "initial") {
-      return;
-    }
-    if (buttonState === "running") {
+    if (buttonState === "initial" || buttonState === "running") {
       return;
     }
     setButtonState("initial"); //初期状態に変更
-
-    setTimer(0); //タイマーを０にする
+    initialization();
   };
 
-  console.log(buttonState);
+  // 0になったらタイマーをストップ（useEffectを使用したほうが良い？）
+  if (workoutTime === 0 || restTime === 0) {
+    handleStop();
+    initialization();
+    setToggle(!toggle);
+  }
 
   return (
     <main className={styles.main}>
       <Headline />
-      <div>{timer}</div>
-      <div>{Math.floor((timer / 1000) % 60)}s</div>
-      <div>{(timer / 10) % 1000}ms</div>
+      <div>{toggle ? "workout" : "rest"}</div>
+      <div>{toggle ? workoutTime : restTime}</div>
+      {/* <div>{Math.floor((workoutTime / 1000) % 60)}s</div> */}
+      <div>運動時間{Math.ceil((workoutTime / 1000) % 60)}秒</div>
+      <div>休憩時間{Math.ceil((restTime / 1000) % 60)}秒</div>
+      {/* <div>{(workout / 10) % 1000}ms</div> */}
+
+      {/* <ShowTimer timer={timer} /> */}
       <button onClick={handleStart}>Start</button>
       <button onClick={handleStop}>Stop</button>
       <button onClick={handleReset}>Reset</button>
+
+      <p>{buttonState}</p>
+
+      <div>A{countA}</div>
+      <div>B{countB}</div>
+      <button onClick={handleClick}>カウント</button>
+      <button
+        onClick={() => {
+          setToggle(!toggle);
+        }}
+      >
+        切り替え
+      </button>
     </main>
   );
 }
