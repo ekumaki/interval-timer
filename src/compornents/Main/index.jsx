@@ -4,10 +4,6 @@ import { useCallback } from "react/cjs/react.development";
 import { Headline } from "src/compornents/Headline";
 import styles from "src/compornents/Main/Main.module.css";
 
-// const ShowTimer = ({timer}) => {
-//   return <div>{timer}</div>
-// }
-
 export function Main() {
   const defaultWorkoutValue = 4000;
   const defaultRestValue = 3000;
@@ -18,6 +14,7 @@ export function Main() {
   const [toggle, setToggle] = useState(true);
 
   // test用
+  const [flag, setFlag] = useState(0);
   const [countA, setCountA] = useState(1);
   const [countB, setCountB] = useState(1);
 
@@ -28,15 +25,15 @@ export function Main() {
   const handleClick = useCallback(() => {
     toggle ? countUp(setCountA) : countUp(setCountB);
   }, [toggle]);
-  console.log(toggle ? "workout" : "rest");
+  // console.log(toggle ? "workout" : "rest");
   // ここまでtest
 
   // スタートボタンの処理
-  const countDown = (settimer) => {
+  const countDown = useCallback((settimer) => {
     settimer((prevTime) => prevTime - 10);
-  };
+  }, []);
 
-  const handleStart = () => {
+  const handleStart = useCallback(() => {
     // 計測時はボタン無効化
     if (buttonState === "running") {
       return;
@@ -47,23 +44,25 @@ export function Main() {
         toggle ? countDown(setWorkoutTime) : countDown(setRestTime);
       }, 10)
     );
-  };
+  }, [buttonState, toggle, countDown]);
 
   // ストップボタンの処理
-  const handleStop = () => {
+  const handleStop = useCallback(() => {
     // 初期状態時と停止時はボタン無効化
     if (buttonState === "initial" || buttonState === "stopped") {
       return;
     }
     setButtonState("stopped"); //停止状態に変更
     clearTimeout(timeoutId);
-  };
+  }, [buttonState, timeoutId]);
 
   // タイマーの初期化
   const initialization = () => {
-    toggle
-      ? setWorkoutTime(defaultWorkoutValue)
-      : setRestTime(defaultRestValue);
+    // toggle
+    //   ? setWorkoutTime(defaultWorkoutValue)
+    //   : setRestTime(defaultRestValue);
+    setWorkoutTime(defaultWorkoutValue);
+    setRestTime(defaultRestValue);
   };
 
   // リセットボタンの処理
@@ -74,6 +73,7 @@ export function Main() {
     }
     setButtonState("initial"); //初期状態に変更
     initialization();
+    setToggle(true);
   };
 
   // 0になったらタイマーをストップ（useEffectを使用したほうが良い？）
@@ -81,7 +81,17 @@ export function Main() {
     handleStop();
     initialization();
     setToggle(!toggle);
+    setFlag(1);
   }
+
+  useEffect(() => {
+    if (flag === 1) {
+      handleStart();
+      setFlag(0);
+    }
+  }, [flag]);
+
+  console.log(buttonState);
 
   return (
     <main className={styles.main}>
