@@ -5,28 +5,44 @@ import { Headline } from "src/compornents/Headline";
 import styles from "src/compornents/Main/Main.module.css";
 
 export function Main() {
-  const defaultWorkoutValue = 4000;
-  const defaultRestValue = 3000;
-  const [workoutTime, setWorkoutTime] = useState(defaultWorkoutValue);
-  const [restTime, setRestTime] = useState(defaultRestValue);
+  const [defaultWorkout, setDefaultWorkout] = useState(4000);
+  const [defaultRest, setDefaultRest] = useState(3000);
+  const [workoutTime, setWorkoutTime] = useState(defaultWorkout);
+  const [restTime, setRestTime] = useState(defaultRest);
   const [timeoutId, setTimeoutId] = useState();
   const [buttonState, setButtonState] = useState("initial");
   const [toggle, setToggle] = useState(true);
+  const [flag, setFlag] = useState(false);
 
   // test用
-  const [flag, setFlag] = useState(0);
   const [countA, setCountA] = useState(1);
   const [countB, setCountB] = useState(1);
 
-  const countUp = useCallback((setcount) => {
-    setcount((prevCount) => prevCount + 1);
+  const handleClick = useCallback(() => {
+    toggle ? adjustTime(setCountA, 1) : adjustTime(setCountB, 2);
+  }, [toggle]);
+  // ここまでtest
+
+  // 秒数の設定
+  const adjustTime = useCallback((setcount, count) => {
+    setcount((prevCount) => prevCount + count);
   }, []);
 
-  const handleClick = useCallback(() => {
-    toggle ? countUp(setCountA) : countUp(setCountB);
-  }, [toggle]);
-  // console.log(toggle ? "workout" : "rest");
-  // ここまでtest
+  const handleAdjust = useCallback(
+    (category, count) => {
+      if (category === "workout") {
+        adjustTime(setWorkoutTime, count);
+        adjustTime(setDefaultWorkout, count);
+      } else if (category === "rest") {
+        adjustTime(setRestTime, count);
+        adjustTime(setDefaultRest, count);
+      }
+    },
+    [adjustTime]
+  );
+
+  console.log(defaultWorkout);
+  // console.log(workoutTime);
 
   // スタートボタンの処理
   const countDown = useCallback((settimer) => {
@@ -58,11 +74,8 @@ export function Main() {
 
   // タイマーの初期化
   const initialization = () => {
-    // toggle
-    //   ? setWorkoutTime(defaultWorkoutValue)
-    //   : setRestTime(defaultRestValue);
-    setWorkoutTime(defaultWorkoutValue);
-    setRestTime(defaultRestValue);
+    setWorkoutTime(defaultWorkout);
+    setRestTime(defaultRest);
   };
 
   // リセットボタンの処理
@@ -73,23 +86,24 @@ export function Main() {
     }
     setButtonState("initial"); //初期状態に変更
     initialization();
-    setToggle(true);
+    setToggle(true); // workoutを初期状態とする
   };
 
-  // 0になったらタイマーをストップ（useEffectを使用したほうが良い？）
+  // 0になったらタイマーをストップしフラグを立てる
   if (workoutTime === 0 || restTime === 0) {
     handleStop();
     initialization();
     setToggle(!toggle);
-    setFlag(1);
+    setFlag(true);
   }
 
+  // フラグが立った場合にもう一方のタイマーを開始
   useEffect(() => {
-    if (flag === 1) {
+    if (flag) {
       handleStart();
-      setFlag(0);
+      setFlag(false);
     }
-  }, [flag]);
+  }, [flag, handleStart]);
 
   console.log(buttonState);
 
@@ -110,8 +124,37 @@ export function Main() {
 
       <p>{buttonState}</p>
 
-      <div>A{countA}</div>
-      <div>B{countB}</div>
+      <button
+        onClick={() => {
+          handleAdjust("workout", 1000);
+        }}
+      >
+        運動+1秒
+      </button>
+      <button
+        onClick={() => {
+          handleAdjust("workout", -1000);
+        }}
+      >
+        運動-1秒
+      </button>
+      <button
+        onClick={() => {
+          handleAdjust("rest", 1000);
+        }}
+      >
+        休憩+1秒
+      </button>
+      <button
+        onClick={() => {
+          handleAdjust("rest", -1000);
+        }}
+      >
+        休憩-1秒
+      </button>
+
+      <div>運動時間{countA}</div>
+      <div>休憩時間{countB}</div>
       <button onClick={handleClick}>カウント</button>
       <button
         onClick={() => {
