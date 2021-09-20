@@ -13,6 +13,8 @@ export function Main() {
   const [buttonState, setButtonState] = useState("initial");
   const [toggle, setToggle] = useState(true);
   const [flag, setFlag] = useState(false);
+  const [defaultRepeat, setDefaultRepeat] = useState(1);
+  const [repeat, setRepeat] = useState(0);
 
   // test用
   const [countA, setCountA] = useState(1);
@@ -23,13 +25,25 @@ export function Main() {
   }, [toggle]);
   // ここまでtest
 
+  // セット（繰り返し）数の設定
+  const handleRepeat = () => {
+    setDefaultRepeat((prevCount) => prevCount + 1);
+    // setRepeat((prevCount) => prevCount + 1);
+  };
+
   // 秒数の設定
   const adjustTime = useCallback((setcount, count) => {
     setcount((prevCount) => prevCount + count);
   }, []);
 
   const handleAdjust = useCallback(
+    // category: workoutかrestか
+    // count: 増やす（減らす）秒数
     (category, count) => {
+      // 計測時と停止時はボタン無効化
+      if (buttonState === "running" || buttonState === "stopped") {
+        return;
+      }
       if (category === "workout") {
         adjustTime(setWorkoutTime, count);
         adjustTime(setDefaultWorkout, count);
@@ -38,10 +52,10 @@ export function Main() {
         adjustTime(setDefaultRest, count);
       }
     },
-    [adjustTime]
+    [adjustTime, buttonState]
   );
 
-  console.log(defaultWorkout);
+  // console.log(defaultWorkout);
   // console.log(workoutTime);
 
   // スタートボタンの処理
@@ -73,29 +87,51 @@ export function Main() {
   }, [buttonState, timeoutId]);
 
   // タイマーの初期化
-  const initialization = () => {
+  const initialization = useCallback(() => {
     setWorkoutTime(defaultWorkout);
     setRestTime(defaultRest);
-  };
+  }, [defaultWorkout, defaultRest]);
 
   // リセットボタンの処理
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     // 初期状態時と計測時はボタン無効化
     if (buttonState === "initial" || buttonState === "running") {
       return;
     }
     setButtonState("initial"); //初期状態に変更
     initialization();
+    setRepeat(0);
     setToggle(true); // workoutを初期状態とする
-  };
+  }, [buttonState, initialization]);
+
+  // セット回数分が終わったときの処理
+  if (repeat === defaultRepeat * 2) {
+    // console.log("end");
+    handleReset();
+  }
 
   // 0になったらタイマーをストップしフラグを立てる
-  if (workoutTime === 0 || restTime === 0) {
-    handleStop();
-    initialization();
-    setToggle(!toggle);
-    setFlag(true);
-  }
+  useEffect(() => {
+    if (workoutTime === 0 || restTime === 0) {
+      setRepeat((prevCount) => prevCount + 1);
+      handleStop();
+      initialization();
+
+      if (!(repeat + 1 === defaultRepeat * 2)) {
+        setToggle(!toggle);
+        setFlag(true);
+      }
+    }
+  }, [
+    toggle,
+    flag,
+    repeat,
+    defaultRepeat,
+    workoutTime,
+    restTime,
+    handleStop,
+    initialization,
+  ]);
 
   // フラグが立った場合にもう一方のタイマーを開始
   useEffect(() => {
@@ -105,7 +141,7 @@ export function Main() {
     }
   }, [flag, handleStart]);
 
-  console.log(buttonState);
+  // console.log(buttonState);
 
   return (
     <main className={styles.main}>
@@ -124,6 +160,11 @@ export function Main() {
 
       <p>{buttonState}</p>
 
+      <button onClick={handleRepeat}>セット+1回</button>
+      <p>
+        セット数 {Math.floor(repeat / 2) + 1}/{defaultRepeat}回
+      </p>
+      <p>確認用 セット数{repeat}回</p>
       <button
         onClick={() => {
           handleAdjust("workout", 1000);
