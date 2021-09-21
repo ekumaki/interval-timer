@@ -17,27 +17,31 @@ export function Main() {
   const [repeat, setRepeat] = useState(0);
 
   // test用
-  const [countA, setCountA] = useState(1);
-  const [countB, setCountB] = useState(1);
+  // const [countA, setCountA] = useState(1);
+  // const [countB, setCountB] = useState(1);
 
-  const handleClick = useCallback(() => {
-    toggle ? adjustTime(setCountA, 1) : adjustTime(setCountB, 2);
-  }, [toggle]);
+  // const handleClick = useCallback(() => {
+  //   toggle ? adjustTime(setCountA, 1) : adjustTime(setCountB, 2);
+  // }, [toggle]);
   // ここまでtest
 
-  // セット（繰り返し）数の設定
-  const handleRepeat = () => {
-    setDefaultRepeat((prevCount) => prevCount + 1);
-    // setRepeat((prevCount) => prevCount + 1);
-  };
-
-  // 秒数の設定
+  // 秒数・セット数の設定用
   const adjustTime = useCallback((setcount, count) => {
     setcount((prevCount) => prevCount + count);
   }, []);
 
+  // セット（繰り返し）数の設定
+  // const handleRepeat = useCallback(
+  //   (count) => {
+  //     // setDefaultRepeat((prevCount) => prevCount + 1);
+  //     adjustTime(setDefaultRepeat, count);
+  //   },
+  //   [adjustTime]
+  // );
+
+  // 秒数の設定
   const handleAdjust = useCallback(
-    // category: workoutかrestか
+    // category: workoutとrestの区分
     // count: 増やす（減らす）秒数
     (category, count) => {
       // 計測時と停止時はボタン無効化
@@ -113,7 +117,8 @@ export function Main() {
   // 0になったらタイマーをストップしフラグを立てる
   useEffect(() => {
     if (workoutTime === 0 || restTime === 0) {
-      setRepeat((prevCount) => prevCount + 1);
+      // setRepeat((prevCount) => prevCount + 1);
+      adjustTime(setRepeat, 1);
       handleStop();
       initialization();
 
@@ -123,6 +128,7 @@ export function Main() {
       }
     }
   }, [
+    adjustTime,
     toggle,
     flag,
     repeat,
@@ -160,7 +166,22 @@ export function Main() {
 
       <p>{buttonState}</p>
 
-      <button onClick={handleRepeat}>セット+1回</button>
+      <button
+        onClick={() => {
+          adjustTime(setDefaultRepeat, 1);
+        }}
+      >
+        セット+1回
+      </button>
+      <button
+        onClick={() => {
+          // 0回にならないように制御する
+          !(defaultRepeat === 1) && adjustTime(setDefaultRepeat, -1);
+        }}
+      >
+        セット-1回
+      </button>
+
       <p>
         セット数 {Math.floor(repeat / 2) + 1}/{defaultRepeat}回
       </p>
@@ -174,7 +195,8 @@ export function Main() {
       </button>
       <button
         onClick={() => {
-          handleAdjust("workout", -1000);
+          // 0秒にならないように制御する
+          !(workoutTime === 1000) && handleAdjust("workout", -1000);
         }}
       >
         運動-1秒
@@ -188,13 +210,15 @@ export function Main() {
       </button>
       <button
         onClick={() => {
-          handleAdjust("rest", -1000);
+          // 0秒にならないように制御する
+          !(restTime === 1000) && handleAdjust("rest", -1000);
         }}
       >
         休憩-1秒
       </button>
 
-      <div>運動時間{countA}</div>
+      <p>※終了状態を作成する（後でOK）</p>
+      {/* <div>運動時間{countA}</div>
       <div>休憩時間{countB}</div>
       <button onClick={handleClick}>カウント</button>
       <button
@@ -203,7 +227,7 @@ export function Main() {
         }}
       >
         切り替え
-      </button>
+      </button> */}
     </main>
   );
 }
