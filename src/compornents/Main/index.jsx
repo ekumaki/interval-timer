@@ -15,6 +15,7 @@ export function Main() {
   const [buttonState, setButtonState] = useState("initial");
   const [toggle, setToggle] = useState(true); // 運動と休憩の切替用
   const [flag, setFlag] = useState(false); // タイマーの切替用
+  const limit = 600; // 秒数の上限
 
   // test用
   // const [countA, setCountA] = useState(1);
@@ -26,8 +27,8 @@ export function Main() {
   // ここまでtest
 
   // 秒数・セット数の設定用
-  const adjustTime = useCallback((setcount, count) => {
-    setcount((prevCount) => prevCount + count);
+  const adjustTime = useCallback((setTimer, seconds) => {
+    setTimer((prevCount) => prevCount + seconds);
   }, []);
 
   // セット（繰り返し）数の設定
@@ -43,28 +44,64 @@ export function Main() {
   const handleAdjust = useCallback(
     // category: workoutとrestの区分
     // count: 増やす（減らす）秒数
-    (category, count) => {
+    (category, seconds) => {
       // 計測時と停止時はボタン無効化
       if (buttonState === "running" || buttonState === "stopped") {
         return;
       }
       if (category === "workout") {
-        adjustTime(setWorkoutTime, count);
-        adjustTime(setDefaultWorkout, count);
+        adjustTime(setWorkoutTime, seconds * 1000);
+        adjustTime(setDefaultWorkout, seconds * 1000);
       } else if (category === "rest") {
-        adjustTime(setRestTime, count);
-        adjustTime(setDefaultRest, count);
+        adjustTime(setRestTime, seconds * 1000);
+        adjustTime(setDefaultRest, seconds * 1000);
       }
     },
     [adjustTime, buttonState]
+  );
+
+  // 複数秒（+10秒など）のプラス
+  const handleAdjustPlus = useCallback(
+    (category, timer, setTimer, setDefault, seconds) => {
+      if (timer >= limit * 1000) {
+        // 上限を超えた後にボタンを押した場合はメッセージを表示
+        alert(`${limit / 60}分（${limit}秒）以上に設定することはできません。`);
+      } else if (limit * 1000 - timer < seconds * 1000) {
+        // 上限を超える場合は秒数を上限に設定
+        setTimer(limit * 1000);
+        setDefault(limit * 1000);
+      } else {
+        // 上限に達しない場合は秒数をプラス
+        handleAdjust(category, seconds);
+      }
+    },
+    [handleAdjust]
+  );
+
+  // 複数秒（-10秒など）のマイナス
+  const handleAdjustMinus = useCallback(
+    (category, timer, setTimer, setDefault, seconds) => {
+      if (timer <= 1000) {
+        // 秒数が１秒以下でボタンを押した場合はメッセージを表示
+        alert(`${limit / 60}分（${limit}秒）以上に設定することはできません。`);
+      } else if (timer + seconds * 1000 < 1000) {
+        // １秒未満になる場合は秒数を１秒に設定
+        setTimer(1000);
+        setDefault(1000);
+      } else {
+        // 上記以外の場合は秒数をマイナス
+        handleAdjust(category, seconds);
+      }
+    },
+    [handleAdjust]
   );
 
   // console.log(defaultWorkout);
   // console.log(workoutTime);
 
   // スタートボタンの処理
-  const countDown = useCallback((settimer) => {
-    settimer((prevTime) => prevTime - 10);
+  const countDown = useCallback((setTimer) => {
+    setTimer((prevTime) => prevTime - 10);
   }, []);
 
   const handleStart = useCallback(() => {
@@ -155,8 +192,8 @@ export function Main() {
       <div>{toggle ? "workout" : "rest"}</div>
       <div>{toggle ? workoutTime : restTime}</div>
       {/* <div>{Math.floor((workoutTime / 1000) % 60)}s</div> */}
-      <div>運動時間{Math.ceil((workoutTime / 1000) % 60)}秒</div>
-      <div>休憩時間{Math.ceil((restTime / 1000) % 60)}秒</div>
+      <div>運動時間{Math.ceil(workoutTime / 1000)}秒</div>
+      <div>休憩時間{Math.ceil(restTime / 1000)}秒</div>
       {/* <div>{(workout / 10) % 1000}ms</div> */}
 
       {/* <ShowTimer timer={timer} /> */}
@@ -176,6 +213,7 @@ export function Main() {
       >
         セット+1回
       </button>
+
       <button
         onClick={() => {
           // 0回にならないように制御する
@@ -191,22 +229,51 @@ export function Main() {
         セット数 {Math.floor(repeat / 2) + 1}/{defaultRepeat}回
       </p>
       <p>確認用 セット数{repeat}回</p>
+
+      <button
+        onClick={() => {
+          handleAdjustPlus(
+            "workout",
+            workoutTime,
+            setWorkoutTime,
+            setDefaultWorkout,
+            100
+          );
+        }}
+      >
+        運動+100秒
+      </button>
+
+      <button
+        onClick={() => {
+          handleAdjustMinus(
+            "workout",
+            workoutTime,
+            setWorkoutTime,
+            setDefaultWorkout,
+            -100
+          );
+        }}
+      >
+        運動-100秒
+      </button>
+
       <button
         onClick={() => {
           // 上限を10分とする
-          !(workoutTime === 600000)
-            ? handleAdjust("workout", 1000)
+          !(workoutTime >= limit * 1000)
+            ? handleAdjust("workout", 1)
             : alert("10分（600秒）以上に設定することはできません。");
-          // handleAdjust("workout", 1000);
         }}
       >
         運動+1秒
       </button>
+
       <button
         onClick={() => {
           // 0秒にならないように制御する
-          !(workoutTime === 1000)
-            ? handleAdjust("workout", -1000)
+          !(workoutTime <= 1000)
+            ? handleAdjust("workout", -1)
             : alert("1秒未満に設定することはできません。");
         }}
       >
@@ -215,19 +282,42 @@ export function Main() {
 
       <button
         onClick={() => {
+          handleAdjustPlus("rest", restTime, setRestTime, setDefaultRest, 100);
+        }}
+      >
+        休憩+100秒
+      </button>
+
+      <button
+        onClick={() => {
+          handleAdjustMinus(
+            "rest",
+            restTime,
+            setRestTime,
+            setDefaultRest,
+            -100
+          );
+        }}
+      >
+        休憩-100秒
+      </button>
+
+      <button
+        onClick={() => {
           // 上限を10分とする
-          !(restTime === 600000)
-            ? handleAdjust("rest", 1000)
+          !(restTime >= limit * 1000)
+            ? handleAdjust("rest", 1)
             : alert("10分（600秒）以上に設定することはできません。");
         }}
       >
         休憩+1秒
       </button>
+
       <button
         onClick={() => {
           // 0秒にならないように制御する
-          !(restTime === 1000)
-            ? handleAdjust("rest", -1000)
+          !(restTime <= 1000)
+            ? handleAdjust("rest", -1)
             : alert("1秒未満に設定することはできません。");
         }}
       >
