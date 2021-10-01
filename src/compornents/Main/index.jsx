@@ -9,9 +9,12 @@ export function Main() {
   const [defaultRest, setDefaultRest] = useState(3000);
   const [workoutTime, setWorkoutTime] = useState(defaultWorkout);
   const [restTime, setRestTime] = useState(defaultRest);
+  const defaultPreTime = 5000;
+  const [preTime, setPreTime] = useState(defaultPreTime);
   const [defaultRepeat, setDefaultRepeat] = useState(1);
   const [repeat, setRepeat] = useState(0);
-  const [timeoutId, setTimeoutId] = useState();
+  const [timeoutId, setTimeoutId] = useState(); // 通常のタイマー停止用
+  const [preTimeoutId, setPreTimeoutId] = useState(); // 準備時間停止用
   const [buttonState, setButtonState] = useState("initial");
   const [toggle, setToggle] = useState(true); // 運動と休憩の切替用
   const [flag, setFlag] = useState(false); // タイマーの切替用
@@ -30,15 +33,6 @@ export function Main() {
   const adjustTime = useCallback((setTimer, seconds) => {
     setTimer((prevCount) => prevCount + seconds);
   }, []);
-
-  // セット（繰り返し）数の設定
-  // const handleRepeat = useCallback(
-  //   (count) => {
-  //     // setDefaultRepeat((prevCount) => prevCount + 1);
-  //     adjustTime(setDefaultRepeat, count);
-  //   },
-  //   [adjustTime]
-  // );
 
   // 秒数の設定
   const handleAdjust = useCallback(
@@ -83,7 +77,7 @@ export function Main() {
     (category, timer, setTimer, setDefault, seconds) => {
       if (timer <= 1000) {
         // 秒数が１秒以下でボタンを押した場合はメッセージを表示
-        alert(`${limit / 60}分（${limit}秒）以上に設定することはできません。`);
+        alert("１秒未満に設定することはできません。");
       } else if (timer + seconds * 1000 < 1000) {
         // １秒未満になる場合は秒数を１秒に設定
         setTimer(1000);
@@ -96,17 +90,28 @@ export function Main() {
     [handleAdjust]
   );
 
-  // console.log(defaultWorkout);
-  // console.log(workoutTime);
-
-  // スタートボタンの処理
+  // タイマーを減らす処理
   const countDown = useCallback((setTimer) => {
     setTimer((prevTime) => prevTime - 10);
   }, []);
 
+  // 準備時間の処理
+  const handlePreStart = useCallback(() => {
+    setButtonState("preparing");
+    setPreTimeoutId(
+      setInterval(() => {
+        countDown(setPreTime);
+      }, 10)
+    );
+  }, [countDown]);
+
+  // スタートボタンの処理
   const handleStart = useCallback(() => {
+    console.log(buttonState);
+    console.log("test");
+
     // 計測時はボタン無効化
-    if (buttonState === "running") {
+    if (buttonState === "preparing" || buttonState === "running") {
       return;
     }
     setButtonState("running"); //計測状態に変更
@@ -117,10 +122,29 @@ export function Main() {
     );
   }, [buttonState, toggle, countDown]);
 
+  // 準備時間が０になったらタイマーをスタートさせる
+  useEffect(() => {
+    if (preTime === 0) {
+      setButtonState("standby");
+      clearInterval(preTimeoutId);
+      setPreTime(defaultPreTime);
+    }
+  }, [handleStart, preTime, preTimeoutId]);
+
+  useEffect(() => {
+    if (buttonState == "standby") {
+      handleStart();
+    }
+  }, [buttonState, handleStart]);
+
   // ストップボタンの処理
   const handleStop = useCallback(() => {
     // 初期状態時と停止時はボタン無効化
-    if (buttonState === "initial" || buttonState === "stopped") {
+    if (
+      buttonState === "initial" ||
+      buttonState === "preparing" ||
+      buttonState === "stopped"
+    ) {
       return;
     }
     setButtonState("stopped"); //停止状態に変更
@@ -136,7 +160,11 @@ export function Main() {
   // リセットボタンの処理
   const handleReset = useCallback(() => {
     // 初期状態時と計測時はボタン無効化
-    if (buttonState === "initial" || buttonState === "running") {
+    if (
+      buttonState === "initial" ||
+      buttonState === "preparing" ||
+      buttonState === "running"
+    ) {
       return;
     }
     setButtonState("initial"); //初期状態に変更
@@ -196,19 +224,28 @@ export function Main() {
       <div>休憩時間{Math.ceil(restTime / 1000)}秒</div>
       {/* <div>{(workout / 10) % 1000}ms</div> */}
 
-      {/* <ShowTimer timer={timer} /> */}
-      <button onClick={handleStart}>Start</button>
+      {/* <button onClick={handleStart}>Start</button> */}
+      <button
+        onClick={() => {
+          buttonState === "initial" ? handlePreStart() : handleStart();
+        }}
+      >
+        Start
+      </button>
       <button onClick={handleStop}>Stop</button>
       <button onClick={handleReset}>Reset</button>
+      {/* <button onClick={handlePreStart}>PreStart-test</button> */}
 
+      <br />
+      <div>準備時間{Math.ceil(preTime / 1000)}秒</div>
       <p>{buttonState}</p>
 
       <button
         onClick={() => {
           // 20回を上限とする
-          !(defaultRepeat === 20)
+          !(defaultRepeat === 100)
             ? adjustTime(setDefaultRepeat, 1)
-            : alert("20回以上に設定することはできません。");
+            : alert("100回以上に設定することはできません。");
         }}
       >
         セット+1回
@@ -324,17 +361,7 @@ export function Main() {
         休憩-1秒
       </button>
 
-      <p>※終了状態を作成する（後でOK）</p>
-      {/* <div>運動時間{countA}</div>
-      <div>休憩時間{countB}</div>
-      <button onClick={handleClick}>カウント</button>
-      <button
-        onClick={() => {
-          setToggle(!toggle);
-        }}
-      >
-        切り替え
-      </button> */}
+      {/* <p>※終了状態を作成する（後でOK）</p> */}
     </main>
   );
 }
