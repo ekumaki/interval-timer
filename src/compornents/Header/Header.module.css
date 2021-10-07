@@ -1,4 +1,4 @@
-.title a {
+/* .title a {
   color: #0070f3;
   text-decoration: none;
 }
@@ -7,20 +7,16 @@
 .title a:focus,
 .title a:active {
   text-decoration: underline;
-}
+} */
 
 .title {
   margin: 0;
   line-height: 1.15;
-  font-size: 4rem;
-}
-
-.title,
-.description {
+  font-size: 2.5rem;
   text-align: center;
 }
 
+/* .title,
 .description {
-  line-height: 1.5;
-  font-size: 1.5rem;
-}
+  text-align: center;
+} */
