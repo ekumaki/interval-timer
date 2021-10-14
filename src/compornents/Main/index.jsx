@@ -1,7 +1,6 @@
 // import Image from 'next/image'
 import { useEffect, useState } from "react";
 import { useCallback } from "react/cjs/react.development";
-import { Headline } from "src/compornents/Headline";
 import styles from "src/compornents/Main/Main.module.css";
 
 export function Main() {
@@ -9,7 +8,7 @@ export function Main() {
   const [defaultRest, setDefaultRest] = useState(3000);
   const [workoutTime, setWorkoutTime] = useState(defaultWorkout);
   const [restTime, setRestTime] = useState(defaultRest);
-  const defaultPreTime = 5000;
+  const defaultPreTime = 3000;
   const [preTime, setPreTime] = useState(defaultPreTime);
   const [defaultRepeat, setDefaultRepeat] = useState(1);
   const [repeat, setRepeat] = useState(0);
@@ -173,6 +172,16 @@ export function Main() {
     setToggle(true); // workoutを初期状態とする
   }, [buttonState, initialization]);
 
+  const handelStartStop = () => {
+    if (buttonState === "initial") {
+      handlePreStart();
+    } else if (buttonState === "running") {
+      handleStop();
+    } else if (buttonState === "stopped") {
+      handleStart();
+    }
+  };
+
   // セット回数分が終わったときの処理
   if (repeat === defaultRepeat * 2) {
     // console.log("end");
@@ -216,31 +225,192 @@ export function Main() {
 
   return (
     <main className={styles.main}>
-      <Headline />
-      <div>{toggle ? "workout" : "rest"}</div>
-      <div>{toggle ? workoutTime : restTime}</div>
+      {/* <div>{toggle ? "workout" : "rest"}</div> */}
+      {/* <div>{toggle ? workoutTime : restTime}</div> */}
       {/* <div>{Math.floor((workoutTime / 1000) % 60)}s</div> */}
-      <div>運動時間{Math.ceil(workoutTime / 1000)}秒</div>
-      <div>休憩時間{Math.ceil(restTime / 1000)}秒</div>
-      {/* <div>{(workout / 10) % 1000}ms</div> */}
+      <div className={styles.timer_wrapper}>
+        <div className={styles.timer_btn}>
+          <div
+            className={styles.btn_mini}
+            onClick={() => {
+              // 上限を10分とする
+              !(workoutTime >= limit * 1000)
+                ? handleAdjust("workout", 1)
+                : alert("10分（600秒）以上に設定することはできません。");
+            }}
+          >
+            +1
+          </div>
 
-      {/* <button onClick={handleStart}>Start</button> */}
-      <button
+          <div
+            className={styles.btn_mini}
+            onClick={() => {
+              // 0秒にならないように制御する
+              !(workoutTime <= 1000)
+                ? handleAdjust("workout", -1)
+                : alert("1秒未満に設定することはできません。");
+            }}
+          >
+            -1
+          </div>
+        </div>
+        <div className={styles.timer_outer}>
+          <div className={styles.timer}>{Math.ceil(workoutTime / 1000)}</div>
+          <p>workout</p>
+        </div>
+        <div className={styles.timer_btn}>
+          <div
+            className={styles.btn_mini}
+            onClick={() => {
+              handleAdjustPlus(
+                "workout",
+                workoutTime,
+                setWorkoutTime,
+                setDefaultWorkout,
+                10
+              );
+            }}
+          >
+            +10
+          </div>
+          <div
+            className={styles.btn_mini}
+            onClick={() => {
+              handleAdjustMinus(
+                "workout",
+                workoutTime,
+                setWorkoutTime,
+                setDefaultWorkout,
+                -10
+              );
+            }}
+          >
+            -10
+          </div>
+        </div>
+      </div>
+      <div className={styles.timer_wrapper}>
+        <div className={styles.timer_btn}>
+          <div
+            className={styles.btn_mini}
+            onClick={() => {
+              // 上限を10分とする
+              !(restTime >= limit * 1000)
+                ? handleAdjust("rest", 1)
+                : alert("10分（600秒）以上に設定することはできません。");
+            }}
+          >
+            +1
+          </div>
+          <div
+            className={styles.btn_mini}
+            onClick={() => {
+              // 0秒にならないように制御する
+              !(restTime <= 1000)
+                ? handleAdjust("rest", -1)
+                : alert("1秒未満に設定することはできません。");
+            }}
+          >
+            -1
+          </div>
+        </div>
+        <div className={styles.timer_outer}>
+          <div className={styles.timer}>{Math.ceil(restTime / 1000)}</div>
+          <p>rest</p>
+        </div>
+        <div className={styles.timer_btn}>
+          <div
+            className={styles.btn_mini}
+            onClick={() => {
+              handleAdjustPlus(
+                "rest",
+                restTime,
+                setRestTime,
+                setDefaultRest,
+                10
+              );
+            }}
+          >
+            +10
+          </div>
+
+          <div
+            className={styles.btn_mini}
+            onClick={() => {
+              handleAdjustMinus(
+                "rest",
+                restTime,
+                setRestTime,
+                setDefaultRest,
+                -10
+              );
+            }}
+          >
+            -10
+          </div>
+        </div>
+      </div>
+      <br />
+      <div className={styles.set_wrapper}>
+        <div className={styles.set_counter_outer}>
+          <div className={styles.set_counter_title}>セット数</div>
+          <div className={styles.set_counter}>{defaultRepeat} 回</div>
+        </div>
+        <div className={styles.set_button_outer}>
+          <button
+            className={styles.btn_setting}
+            onClick={() => {
+              // 99回を上限とする
+              !(defaultRepeat === 100)
+                ? adjustTime(setDefaultRepeat, 1)
+                : alert("100回以上に設定することはできません。");
+            }}
+          >
+            ＋
+          </button>
+          <button
+            className={styles.btn_setting}
+            onClick={() => {
+              // 0回にならないように制御する
+              !(defaultRepeat === 1)
+                ? adjustTime(setDefaultRepeat, -1)
+                : alert("1回未満に設定することはできません。");
+            }}
+          >
+            −
+          </button>
+        </div>
+      </div>
+      <p>
+        セット数 {Math.floor(repeat / 2) + 1}/{defaultRepeat}回
+      </p>
+      <div className={styles.operation}>
+        <div className={styles.btn} onClick={handelStartStop}>
+          START / STOP
+        </div>
+        <div className={styles.btn} onClick={handleReset}>
+          RESET
+        </div>
+      </div>
+      <br />
+      <br />
+
+      {/* <div
+        className={styles.btn}
         onClick={() => {
           buttonState === "initial" ? handlePreStart() : handleStart();
         }}
       >
-        Start
-      </button>
-      <button onClick={handleStop}>Stop</button>
-      <button onClick={handleReset}>Reset</button>
+        START
+      </div>
+      <div className={styles.btn} onClick={handleStop}>
+        STOP
+      </div> */}
       {/* <button onClick={handlePreStart}>PreStart-test</button> */}
-
       <br />
       <div>準備時間{Math.ceil(preTime / 1000)}秒</div>
       <p>{buttonState}</p>
-
-      <button
+      {/* <button
         onClick={() => {
           // 20回を上限とする
           !(defaultRepeat === 100)
@@ -250,7 +420,6 @@ export function Main() {
       >
         セット+1回
       </button>
-
       <button
         onClick={() => {
           // 0回にならないように制御する
@@ -261,41 +430,42 @@ export function Main() {
       >
         セット-1回
       </button>
-
       <p>
         セット数 {Math.floor(repeat / 2) + 1}/{defaultRepeat}回
-      </p>
-      <p>確認用 セット数{repeat}回</p>
-
-      <button
+      </p> */}
+      <div className={styles.btn_mini}>⏫</div>
+      <div className={styles.btn_mini}>🔼</div>
+      {/* <p>確認用 セット数{repeat}回</p> */}
+      {/* <div
+        className={styles.btn}
         onClick={() => {
           handleAdjustPlus(
             "workout",
             workoutTime,
             setWorkoutTime,
             setDefaultWorkout,
-            100
+            10
           );
         }}
       >
-        運動+100秒
-      </button>
-
-      <button
+        運動+10秒
+      </div>
+      <div
+        className={styles.btn}
         onClick={() => {
           handleAdjustMinus(
             "workout",
             workoutTime,
             setWorkoutTime,
             setDefaultWorkout,
-            -100
+            -10
           );
         }}
       >
-        運動-100秒
-      </button>
-
-      <button
+        運動-10秒
+      </div>
+      <div
+        className={styles.btn_mini}
         onClick={() => {
           // 上限を10分とする
           !(workoutTime >= limit * 1000)
@@ -304,9 +474,9 @@ export function Main() {
         }}
       >
         運動+1秒
-      </button>
-
-      <button
+      </div>
+      <div
+        className={styles.btn_mini}
         onClick={() => {
           // 0秒にならないように制御する
           !(workoutTime <= 1000)
@@ -315,31 +485,26 @@ export function Main() {
         }}
       >
         運動-1秒
-      </button>
-
-      <button
+      </div>
+      <div
+        className={styles.btn}
         onClick={() => {
-          handleAdjustPlus("rest", restTime, setRestTime, setDefaultRest, 100);
+          handleAdjustPlus("rest", restTime, setRestTime, setDefaultRest, 10);
         }}
       >
-        休憩+100秒
-      </button>
-
-      <button
+        休憩+10秒
+      </div>
+      a{" "}
+      <div
+        className={styles.btn}
         onClick={() => {
-          handleAdjustMinus(
-            "rest",
-            restTime,
-            setRestTime,
-            setDefaultRest,
-            -100
-          );
+          handleAdjustMinus("rest", restTime, setRestTime, setDefaultRest, -10);
         }}
       >
-        休憩-100秒
-      </button>
-
-      <button
+        休憩-10秒
+      </div>
+      <div
+        className={styles.btn_mini}
         onClick={() => {
           // 上限を10分とする
           !(restTime >= limit * 1000)
@@ -348,9 +513,9 @@ export function Main() {
         }}
       >
         休憩+1秒
-      </button>
-
-      <button
+      </div>
+      <div
+        className={styles.btn_mini}
         onClick={() => {
           // 0秒にならないように制御する
           !(restTime <= 1000)
@@ -359,8 +524,7 @@ export function Main() {
         }}
       >
         休憩-1秒
-      </button>
-
+      </div> */}
       {/* <p>※終了状態を作成する（後でOK）</p> */}
     </main>
   );

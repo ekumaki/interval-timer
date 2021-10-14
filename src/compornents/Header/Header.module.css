@@ -9,6 +9,13 @@
   text-decoration: underline;
 } */
 
+.wrapper {
+  border-bottom: 1px solid white;
+  padding: 8px 0;
+  width: 100%;
+  /* grid-area: header; */
+}
+
 .title {
   margin: 0;
   line-height: 1.15;
