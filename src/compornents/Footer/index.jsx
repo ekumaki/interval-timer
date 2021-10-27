@@ -1,4 +1,3 @@
-import Image from "next/image";
 import styles from "src/compornents/Footer/Footer.module.css";
 
 export function Footer() {
@@ -9,10 +8,7 @@ export function Footer() {
         target="_blank"
         rel="noopener noreferrer"
       >
-        exMachina{" "}
-        <span className={styles.logo}>
-          <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
-        </span>
+        exMachina
       </a>
     </footer>
   );
