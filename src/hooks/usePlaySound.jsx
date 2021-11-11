@@ -3,10 +3,16 @@ import { useRef } from "react";
 export const usePlaySound = () => {
   const soundCountdown = useRef(null);
 
-  const handlePlay = () => {
+  const handleSoundPlay = () => {
     const { current } = soundCountdown;
     current.play();
   };
 
-  return { soundCountdown, handlePlay };
+  const handleSoundStop = () => {
+    const { current } = soundCountdown;
+    current.pause();
+  };
+
+  // return { soundCountdown, handleSoundPlay };
+  return { soundCountdown, handleSoundPlay, handleSoundStop };
 };

@@ -20,7 +20,8 @@ export function Main() {
   const [toggle, setToggle] = useState(true); // 運動と休憩の切替用
   const [flag, setFlag] = useState(false); // タイマーの切替用
   const limit = 600; // 秒数の上限
-  const { soundCountdown, handlePlay } = usePlaySound();
+  // const { soundCountdown, handleSoundPlay } = usePlaySound();
+  const { soundCountdown, handleSoundPlay, handleSoundStop } = usePlaySound();
 
   // 秒数・セット数の設定用
   const adjustTime = useCallback((setTimer, seconds) => {
@@ -93,7 +94,7 @@ export function Main() {
     setButtonState("preparing");
 
     // サウンドテスト
-    handlePlay();
+    handleSoundPlay();
     // ここまでテスト
 
     setPreTimeoutId(
@@ -101,9 +102,9 @@ export function Main() {
         countDown(setPreTime);
       }, 10)
     );
-  }, [countDown, handlePlay]);
+  }, [countDown, handleSoundPlay]);
 
-  // スタートボタンの処理
+  // スタート処理
   const handleStart = useCallback(() => {
     // console.log(buttonState);
     // console.log("test");
@@ -135,7 +136,7 @@ export function Main() {
     }
   }, [buttonState, handleStart]);
 
-  // ストップボタンの処理
+  // ストップ処理
   const handleStop = useCallback(() => {
     // 初期状態時と停止時はボタン無効化
     if (
@@ -171,13 +172,24 @@ export function Main() {
     setToggle(true); // workoutを初期状態とする
   }, [buttonState, initialization]);
 
+  // スタート/ストップボタンの処理
   const handelStartStop = () => {
     if (buttonState === "initial") {
       handlePreStart();
     } else if (buttonState === "running") {
       handleStop();
+
+      // 残り３秒以内になってストップボタンが押された場合、音を止める
+      if (workoutTime < 3000 || restTime < 3000) {
+        handleSoundStop();
+      }
     } else if (buttonState === "stopped") {
       handleStart();
+
+      // 残り３秒以内になってスタートボタンが押された場合、音を再開
+      if (workoutTime < 3000 || restTime < 3000) {
+        handleSoundPlay();
+      }
     }
   };
 
@@ -225,10 +237,9 @@ export function Main() {
   // 残り３秒からカウントダウン音声を鳴らす
   useEffect(() => {
     if (workoutTime === 3000 || restTime === 3000) {
-      console.log("残り３秒");
-      handlePlay();
+      handleSoundPlay();
     }
-  }, [workoutTime, restTime, handlePlay]);
+  }, [workoutTime, restTime, handleSoundPlay]);
 
   // ここまでテスト
 
