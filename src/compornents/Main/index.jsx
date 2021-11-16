@@ -1,9 +1,8 @@
-// import Image from 'next/image'
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useCallback } from "react/cjs/react.development";
 import styles from "src/compornents/Main/Main.module.css";
 import { usePlaySound } from "src/hooks/usePlaySound";
-// import Music from "public/countdown.mp3";
 
 export function Main() {
   const [defaultWorkout, setDefaultWorkout] = useState(10000);
@@ -20,8 +19,13 @@ export function Main() {
   const [toggle, setToggle] = useState(true); // 運動と休憩の切替用
   const [flag, setFlag] = useState(false); // タイマーの切替用
   const limit = 600; // 秒数の上限
-  // const { soundCountdown, handleSoundPlay } = usePlaySound();
-  const { soundCountdown, handleSoundPlay, handleSoundStop } = usePlaySound();
+  const {
+    soundCountdown,
+    handleSoundPlay,
+    handleSoundStop,
+    handleMuted,
+    soundState,
+  } = usePlaySound();
 
   // 秒数・セット数の設定用
   const adjustTime = useCallback((setTimer, seconds) => {
@@ -232,8 +236,6 @@ export function Main() {
     }
   }, [flag, handleStart]);
 
-  // ここからテスト
-
   // 残り３秒からカウントダウン音声を鳴らす
   useEffect(() => {
     if (workoutTime === 3000 || restTime === 3000) {
@@ -241,11 +243,24 @@ export function Main() {
     }
   }, [workoutTime, restTime, handleSoundPlay]);
 
-  // ここまでテスト
-
   return (
     <main className={styles.main}>
       <audio ref={soundCountdown} src="/countdown.mp3"></audio>
+
+      {soundState ? (
+        <div onClick={handleMuted}>
+          <Image
+            src="/image/volumeoff.png"
+            width={48}
+            height={48}
+            alt="volumeoff"
+          />
+        </div>
+      ) : (
+        <div onClick={handleMuted}>
+          <Image src="/image/volume.png" width={48} height={48} alt="volume" />
+        </div>
+      )}
 
       <div className={toggle ? styles.timer_wrapper_red : styles.timer_wrapper}>
         <div className={styles.timer_btn}>
