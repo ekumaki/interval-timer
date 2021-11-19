@@ -5,13 +5,13 @@ import styles from "src/compornents/Main/Main.module.css";
 import { usePlaySound } from "src/hooks/usePlaySound";
 
 export function Main() {
-  const [defaultWorkout, setDefaultWorkout] = useState(10000);
+  const [defaultWorkout, setDefaultWorkout] = useState(20000);
   const [defaultRest, setDefaultRest] = useState(10000);
   const [workoutTime, setWorkoutTime] = useState(defaultWorkout);
   const [restTime, setRestTime] = useState(defaultRest);
   const defaultPreTime = 3000;
   const [preTime, setPreTime] = useState(defaultPreTime);
-  const [defaultRepeat, setDefaultRepeat] = useState(1);
+  const [defaultRepeat, setDefaultRepeat] = useState(8);
   const [repeat, setRepeat] = useState(0);
   const [timeoutId, setTimeoutId] = useState(); // 通常のタイマー停止用
   const [preTimeoutId, setPreTimeoutId] = useState(); // 準備時間停止用
@@ -238,182 +238,194 @@ export function Main() {
 
   // 残り３秒からカウントダウン音声を鳴らす
   useEffect(() => {
+    // 初期状態では音を鳴らさない
+    if (buttonState === "initial") {
+      return;
+    }
     if (workoutTime === 3000 || restTime === 3000) {
       handleSoundPlay();
     }
-  }, [workoutTime, restTime, handleSoundPlay]);
+  }, [buttonState, workoutTime, restTime, handleSoundPlay]);
 
   return (
     <main className={styles.main}>
       <audio ref={soundCountdown} src="/countdown.mp3"></audio>
 
+      <div className={styles.timer_container}>
+        {/* 運動時間の表示 */}
+        <div
+          className={toggle ? styles.timer_wrapper_red : styles.timer_wrapper}
+        >
+          <div className={styles.timer_btn}>
+            {buttonState === "initial" ? (
+              <div
+                className={styles.btn_mini}
+                onClick={() => {
+                  // 上限を10分とする
+                  !(workoutTime >= limit * 1000)
+                    ? handleAdjust("workout", 1)
+                    : alert("10分（600秒）以上に設定することはできません。");
+                }}
+              >
+                +1
+              </div>
+            ) : null}
+
+            {buttonState === "initial" ? (
+              <div
+                className={styles.btn_mini}
+                onClick={() => {
+                  // 0秒にならないように制御する
+                  !(workoutTime <= 1000)
+                    ? handleAdjust("workout", -1)
+                    : alert("1秒未満に設定することはできません。");
+                }}
+              >
+                -1
+              </div>
+            ) : null}
+          </div>
+
+          <div className={styles.timer_outer}>
+            <div className={styles.timer}>{Math.ceil(workoutTime / 1000)}</div>
+            <p>workout</p>
+          </div>
+
+          <div className={styles.timer_btn}>
+            {buttonState === "initial" ? (
+              <div
+                className={styles.btn_mini}
+                onClick={() => {
+                  handleAdjustPlus(
+                    "workout",
+                    workoutTime,
+                    setWorkoutTime,
+                    setDefaultWorkout,
+                    10
+                  );
+                }}
+              >
+                +10
+              </div>
+            ) : null}
+
+            {buttonState === "initial" ? (
+              <div
+                className={styles.btn_mini}
+                onClick={() => {
+                  handleAdjustMinus(
+                    "workout",
+                    workoutTime,
+                    setWorkoutTime,
+                    setDefaultWorkout,
+                    -10
+                  );
+                }}
+              >
+                -10
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        {/* 休憩時間の表示 */}
+        <div
+          className={
+            !(buttonState === "initial") & toggle
+              ? styles.timer_wrapper
+              : styles.timer_wrapper_blue
+          }
+        >
+          <div className={styles.timer_btn}>
+            {buttonState === "initial" ? (
+              <div
+                className={styles.btn_mini}
+                onClick={() => {
+                  // 上限を10分とする
+                  !(restTime >= limit * 1000)
+                    ? handleAdjust("rest", 1)
+                    : alert("10分（600秒）以上に設定することはできません。");
+                }}
+              >
+                +1
+              </div>
+            ) : null}
+
+            {buttonState === "initial" ? (
+              <div
+                className={styles.btn_mini}
+                onClick={() => {
+                  // 0秒にならないように制御する
+                  !(restTime <= 1000)
+                    ? handleAdjust("rest", -1)
+                    : alert("1秒未満に設定することはできません。");
+                }}
+              >
+                -1
+              </div>
+            ) : null}
+          </div>
+
+          <div className={styles.timer_outer}>
+            <div className={styles.timer}>{Math.ceil(restTime / 1000)}</div>
+            <p>rest</p>
+          </div>
+
+          <div className={styles.timer_btn}>
+            {buttonState === "initial" ? (
+              <div
+                className={styles.btn_mini}
+                onClick={() => {
+                  handleAdjustPlus(
+                    "rest",
+                    restTime,
+                    setRestTime,
+                    setDefaultRest,
+                    10
+                  );
+                }}
+              >
+                +10
+              </div>
+            ) : null}
+
+            {buttonState === "initial" ? (
+              <div
+                className={styles.btn_mini}
+                onClick={() => {
+                  handleAdjustMinus(
+                    "rest",
+                    restTime,
+                    setRestTime,
+                    setDefaultRest,
+                    -10
+                  );
+                }}
+              >
+                -10
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      {/* ミュート用ボタン */}
       {soundState ? (
-        <div onClick={handleMuted}>
+        <div className={styles.btn_muted} onClick={handleMuted}>
           <Image
             src="/image/volumeoff.png"
-            width={48}
-            height={48}
+            width={42}
+            height={42}
             alt="volumeoff"
           />
         </div>
       ) : (
-        <div onClick={handleMuted}>
-          <Image src="/image/volume.png" width={48} height={48} alt="volume" />
+        <div className={styles.btn_muted} onClick={handleMuted}>
+          <Image src="/image/volume.png" width={42} height={42} alt="volume" />
         </div>
       )}
 
-      <div className={toggle ? styles.timer_wrapper_red : styles.timer_wrapper}>
-        <div className={styles.timer_btn}>
-          {buttonState === "initial" ? (
-            <div
-              className={styles.btn_mini}
-              onClick={() => {
-                // 上限を10分とする
-                !(workoutTime >= limit * 1000)
-                  ? handleAdjust("workout", 1)
-                  : alert("10分（600秒）以上に設定することはできません。");
-              }}
-            >
-              +1
-            </div>
-          ) : null}
-
-          {buttonState === "initial" ? (
-            <div
-              className={styles.btn_mini}
-              onClick={() => {
-                // 0秒にならないように制御する
-                !(workoutTime <= 1000)
-                  ? handleAdjust("workout", -1)
-                  : alert("1秒未満に設定することはできません。");
-              }}
-            >
-              -1
-            </div>
-          ) : null}
-        </div>
-
-        <div className={styles.timer_outer}>
-          <div className={styles.timer}>{Math.ceil(workoutTime / 1000)}</div>
-          <p>workout</p>
-        </div>
-
-        <div className={styles.timer_btn}>
-          {buttonState === "initial" ? (
-            <div
-              className={styles.btn_mini}
-              onClick={() => {
-                handleAdjustPlus(
-                  "workout",
-                  workoutTime,
-                  setWorkoutTime,
-                  setDefaultWorkout,
-                  10
-                );
-              }}
-            >
-              +10
-            </div>
-          ) : null}
-
-          {buttonState === "initial" ? (
-            <div
-              className={styles.btn_mini}
-              onClick={() => {
-                handleAdjustMinus(
-                  "workout",
-                  workoutTime,
-                  setWorkoutTime,
-                  setDefaultWorkout,
-                  -10
-                );
-              }}
-            >
-              -10
-            </div>
-          ) : null}
-        </div>
-      </div>
-
-      <div
-        className={
-          !(buttonState === "initial") & toggle
-            ? styles.timer_wrapper
-            : styles.timer_wrapper_blue
-        }
-      >
-        <div className={styles.timer_btn}>
-          {buttonState === "initial" ? (
-            <div
-              className={styles.btn_mini}
-              onClick={() => {
-                // 上限を10分とする
-                !(restTime >= limit * 1000)
-                  ? handleAdjust("rest", 1)
-                  : alert("10分（600秒）以上に設定することはできません。");
-              }}
-            >
-              +1
-            </div>
-          ) : null}
-
-          {buttonState === "initial" ? (
-            <div
-              className={styles.btn_mini}
-              onClick={() => {
-                // 0秒にならないように制御する
-                !(restTime <= 1000)
-                  ? handleAdjust("rest", -1)
-                  : alert("1秒未満に設定することはできません。");
-              }}
-            >
-              -1
-            </div>
-          ) : null}
-        </div>
-
-        <div className={styles.timer_outer}>
-          <div className={styles.timer}>{Math.ceil(restTime / 1000)}</div>
-          <p>rest</p>
-        </div>
-
-        <div className={styles.timer_btn}>
-          {buttonState === "initial" ? (
-            <div
-              className={styles.btn_mini}
-              onClick={() => {
-                handleAdjustPlus(
-                  "rest",
-                  restTime,
-                  setRestTime,
-                  setDefaultRest,
-                  10
-                );
-              }}
-            >
-              +10
-            </div>
-          ) : null}
-
-          {buttonState === "initial" ? (
-            <div
-              className={styles.btn_mini}
-              onClick={() => {
-                handleAdjustMinus(
-                  "rest",
-                  restTime,
-                  setRestTime,
-                  setDefaultRest,
-                  -10
-                );
-              }}
-            >
-              -10
-            </div>
-          ) : null}
-        </div>
-      </div>
-
+      {/* セット数の表示 */}
       {/* 状態によってセット数の表示を切り換える */}
       {buttonState === "initial" ? (
         <div className={styles.set_wrapper}>
@@ -447,11 +459,14 @@ export function Main() {
           </div>
         </div>
       ) : null}
+
       {buttonState === "initial" ? null : (
         <p className={styles.set_counter_display}>
           セット数 {Math.floor(repeat / 2) + 1} / {defaultRepeat}回
         </p>
       )}
+
+      {/* スタート/ストップボタン・リセットボタン */}
       <div className={styles.operation}>
         <div className={styles.btn} onClick={handelStartStop}>
           START / STOP
@@ -460,11 +475,8 @@ export function Main() {
           RESET
         </div>
       </div>
-      <br />
-      <br />
-      <br />
 
-      <div>準備時間{Math.ceil(preTime / 1000)}秒</div>
+      {/* <div>準備時間{Math.ceil(preTime / 1000)}秒</div> */}
     </main>
   );
 }

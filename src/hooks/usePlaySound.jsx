@@ -5,7 +5,7 @@ export const usePlaySound = () => {
   const soundCountdown = useRef(null);
   const [soundState, setSoundState] = useState(false); //ミュート用
 
-  // 音声プレイ
+  // 音声再生
   const handleSoundPlay = () => {
     const { current } = soundCountdown;
     current.play();
