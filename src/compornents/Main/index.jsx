@@ -110,9 +110,6 @@ export function Main() {
 
   // スタート処理
   const handleStart = useCallback(() => {
-    // console.log(buttonState);
-    // console.log("test");
-
     // 計測時はボタン無効化
     if (buttonState === "preparing" || buttonState === "running") {
       return;
@@ -199,14 +196,12 @@ export function Main() {
 
   // セット回数分が終わったときの処理
   if (repeat === defaultRepeat * 2) {
-    // console.log("end");
     handleReset();
   }
 
   // 0になったらタイマーをストップしフラグを立てる
   useEffect(() => {
     if (workoutTime === 0 || restTime === 0) {
-      // setRepeat((prevCount) => prevCount + 1);
       adjustTime(setRepeat, 1);
       handleStop();
       initialization();
