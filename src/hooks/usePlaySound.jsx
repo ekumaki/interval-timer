@@ -1,9 +1,8 @@
-import { useRef } from "react";
-import { useState } from "react/cjs/react.development";
+import { useRef, useState } from "react";
 
 export const usePlaySound = () => {
   const soundCountdown = useRef(null);
-  const [soundState, setSoundState] = useState(false); //ミュート用
+  const [soundState, setSoundState] = useState(false);
 
   // 音声再生
   const handleSoundPlay = () => {

@@ -1,6 +1,5 @@
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import { useCallback } from "react/cjs/react.development";
+import { useCallback, useEffect, useState } from "react";
 import styles from "src/compornents/Main/Main.module.css";
 import { usePlaySound } from "src/hooks/usePlaySound";
 
@@ -97,9 +96,7 @@ export function Main() {
   const handlePreStart = useCallback(() => {
     setButtonState("preparing");
 
-    // サウンドテスト
     handleSoundPlay();
-    // ここまでテスト
 
     setPreTimeoutId(
       setInterval(() => {
@@ -173,7 +170,7 @@ export function Main() {
     setToggle(true); // workoutを初期状態とする
   }, [buttonState, initialization]);
 
-  // スタート/ストップボタンの処理
+  // スタート・ストップボタンの処理
   const handelStartStop = () => {
     if (buttonState === "initial") {
       handlePreStart();
